@@ -11,6 +11,8 @@ Methodology
  <img width="975" height="312" alt="image" src="https://github.com/user-attachments/assets/e62efec7-2903-4ba7-8505-3fc74c72ddaa" />
 
 
+
 •	Treatment group: sellers who accept at least one mission in the program or in the mission group
+
 •	Control group: simulated sellers via 100* Bootstrap + PSM based on confounding factors below
 
