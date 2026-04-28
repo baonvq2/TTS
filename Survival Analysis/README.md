@@ -1,6 +1,6 @@
 **Objective**
 
-To understand which and how seller's actions could impact/speed up such progression time
+To understand which and how seller's actions could impact/speed up such progression time (reaching T3 level or above)
 
 **Methodology**
 
@@ -39,6 +39,6 @@ $$L(\beta) = \prod_{k=1}^{\text{number of events}}L_k(\beta)$$
 - Include both 'successfully achieved T3 sellers' and 'not yet achieved T3 sellers'
 - Cohort: All GB sellers with first_t2_tier_date between '20240101' to '202503xx'
 
-[Image]
+<img width="643" height="241" alt="image" src="https://github.com/user-attachments/assets/cb0fae0b-4e86-4841-bbad-3922c6172f28" />
 
 
