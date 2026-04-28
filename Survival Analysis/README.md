@@ -33,3 +33,12 @@ Remark: $$h_0(t)$$is cancelled out in this expression
     Cox will seek to maximize the product of all $$L_k(\beta)$$at all observed events (the optimization similarly follows MLE for training)
 $$L(\beta) = \prod_{k=1}^{\text{number of events}}L_k(\beta)$$
 
+**Data Collection**
+- Time censored: 60D at max
+- Interval: 7-day interval >> used for data collection window
+- Include both 'successfully achieved T3 sellers' and 'not yet achieved T3 sellers'
+- Cohort: All GB sellers with first_t2_tier_date between '20240101' to '202503xx'
+
+[Image]
+
+
