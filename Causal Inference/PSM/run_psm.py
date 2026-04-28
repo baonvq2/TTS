@@ -213,3 +213,178 @@ class PropensityScoreMatching:
         print(f"Total analysis time: {overall_end_time - overall_start_time:.2f} seconds")
         
         return results, self.df
+
+def aggregate_psm_results(results_list):
+    """
+    Aggregate results from multiple runs of Propensity Score Matching.
+    
+    Parameters:
+    results_list (list): A list of result dictionaries, each from a single run of PSM.
+    
+    Returns:
+    dict: A dictionary containing the mean values for each metric across all runs.
+    """
+    # Initialize a dictionary to store all values for each metric
+    aggregated_results = {}
+    
+    # Assume all dictionaries in the list have the same structure
+    for target in results_list[0].keys():
+        aggregated_results[target] = {}
+        for metric in results_list[0][target].keys():
+            aggregated_results[target][metric] = []
+    
+    # Collect all values for each metric
+    for result in results_list:
+        for target, metrics in result.items():
+            for metric, value in metrics.items():
+                aggregated_results[target][metric].append(value)
+    
+    # Calculate mean for each metric
+    mean_results = {}
+    for target, metrics in aggregated_results.items():
+        mean_results[target] = {metric: np.mean(values) for metric, values in metrics.items()}
+    
+    return mean_results
+
+# Example usage:
+# Assuming you have a list of 50 result dictionaries named 'all_results'
+# all_results = [result1, result2, ..., result50]
+# mean_results = aggregate_psm_results(all_results)
+
+# To print the aggregated results in a readable format:
+def print_aggregated_results(mean_results):
+    for target, metrics in mean_results.items():
+        print(f"\nResults for target: {target}")
+        for metric, value in metrics.items():
+            print(f"  {metric}: {value:.4f}")
+
+def calculate_bootstrap_p_values(results_list):
+    """
+    Calculate p-values from bootstrap results.
+    
+    Parameters:
+    results_list (list): A list of result dictionaries, each from a single bootstrap run.
+    
+    Returns:
+    dict: A dictionary containing the mean effect sizes and corresponding p-values for each target.
+    """
+    bootstrap_results = {}
+    
+    for target in results_list[0].keys():
+        # Extract uplift_after values for this target from all bootstrap samples
+        uplifts = [result[target]['uplift_after'] for result in results_list]
+        benchmark = [result[target]['avg_control_after'] for result in results_list]
+        # Calculate mean effect size
+        mean_effect = np.mean(uplifts)
+        mean_benchmark = np.mean(benchmark)
+        # Calculate standard error
+        se = np.std([uplifts[ii]/mean_benchmark for ii in range(len(uplifts))], ddof=1)  # ddof=1 for sample standard deviation
+        
+        # Calculate z-score
+        z_score = np.mean([uplifts[ii]/mean_benchmark for ii in range(len(uplifts))]) / se
+        
+        # Calculate two-tailed p-value
+        p_value = 2 * (1 - stats.norm.cdf(abs(z_score)))
+        
+        bootstrap_results[target] = {
+            'mean_effect': np.mean([uplifts[ii]/mean_benchmark for ii in range(len(uplifts))]),
+            'val_control': np.mean([result[target]['avg_control_after'] for result in results_list]),
+            'val_treatment': np.mean([result[target]['avg_treated_after'] for result in results_list]),
+            'ss': np.mean([result[target]['n_treated'] for result in results_list]),
+            'p_value': np.mean(p_value),
+            'standard_error': se,
+            'z_score': z_score,
+        }
+    
+    return bootstrap_results
+
+# Example usage:
+# Assuming you have a list of result dictionaries named 'all_results'
+# bootstrap_results = calculate_bootstrap_p_values(all_results)
+
+def print_bootstrap_results(bootstrap_results):
+    for target, metrics in bootstrap_results.items():
+        print(f"\nResults for target: {target}")
+        print(f"  Mean Effect: {metrics['mean_effect']:.4f}")
+        print(f"  Standard Error: {metrics['standard_error']:.4f}")
+        print(f"  Z-score: {metrics['z_score']:.4f}")
+        print(f"  P-value: {metrics['p_value']:.4f}")
+
+def plot_metric_distributions(dataframe_list, output_folder='./plots'):
+    """
+    Create distribution plots for each metric:
+    - Plot the entire distribution in grey
+    - Highlight the area between 2.5th and 97.5th percentiles in orange
+    - Add a vertical line for the treated value
+    - Position the title higher on the plot
+    
+    Args:
+    dataframe_list (list): List of pandas DataFrames
+    output_folder (str): Folder to save the plots (default: './plots')
+    
+    Returns:
+    None
+    """
+    import os
+    os.makedirs(output_folder, exist_ok=True)
+    
+    # Combine all dataframes
+    combined_df = pd.concat(dataframe_list, ignore_index=False)
+    
+    # Get list of unique metrics
+    metrics = combined_df.index.unique()
+
+    #
+    error_metrics = []
+    
+    for metric in metrics:
+        try:
+            fig, ax = plt.subplots(figsize=(12, 6))
+            
+            # Filter data for the current metric
+            metric_data = combined_df.loc[metric]
+            
+            # Get the single value for avg_treated_after
+            treated_value = np.mean(metric_data['avg_treated_after'])
+            
+            # Calculate the lower and upper bounds (2.5% and 97.5% percentiles)
+            lower_bound, upper_bound = np.percentile(metric_data['avg_control_after'], [2.5, 97.5])
+            
+            # Calculate KDE manually
+            kde = stats.gaussian_kde(metric_data['avg_control_after'])
+            x_range = np.linspace(metric_data['avg_control_after'].min(), metric_data['avg_control_after'].max(), 1000)
+            y_range = kde(x_range)
+            
+            # Plot the entire distribution in grey
+            ax.fill_between(x_range, y_range, color='grey', alpha=0.5, label='Control')
+            
+            # Fill the area between 2.5th and 97.5th percentiles with orange
+            ax.fill_between(x_range, y_range, where=(x_range >= lower_bound) & (x_range <= upper_bound), 
+                            color='orange', alpha=0.6)
+            
+            # Add vertical line for treated
+            ax.axvline(treated_value, color='blue', linestyle='--', label='Treated')
+            
+            # Set title with adjusted position
+            ax.set_title(f'Distribution of {metric}', pad=20)  # Increase pad to move title higher
+            
+            ax.set_xlabel('Value')
+            ax.set_ylabel('Density')
+            ax.legend()
+            
+            # Add text annotations for percentiles
+            ax.text(lower_bound, ax.get_ylim()[1], '2.5%', ha='center', va='bottom')
+            ax.text(upper_bound, ax.get_ylim()[1], '97.5%', ha='center', va='bottom')
+            
+            # Adjust layout to prevent cutoff
+            plt.tight_layout()
+            
+            # Save the plot
+    #         plt.savefig(os.path.join(output_folder, f'{metric}_distribution.png'))
+            plt.show()
+        except np.linalg.LinAlgError as err:
+            print(err)
+            error_metrics.append(metric)
+            continue
+    print("  \n  \n  \n  \n  \nUnable to plot distribution graphs due to no difference:") 
+    print(error_metrics)
