@@ -18,12 +18,18 @@ Methodology
 
 
 **Evaluation Methodology (Simulated A/B via Bootstrapping)**
+
 After constructing treatment and control groups using Propensity Score Matching (PSM), we evaluate the causal impact by simulating an A/B testing framework through bootstrapping.
+
 
 Key Idea
 
+
 Since we do not have a true randomized experiment, we:
 
+
 Re-sample the matched dataset multiple times
+
 Compute the treatment effect repeatedly
+
 Build an empirical distribution of the effect size
