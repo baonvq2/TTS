@@ -22,14 +22,58 @@ Methodology
 After constructing treatment and control groups using Propensity Score Matching (PSM), we evaluate the causal impact by simulating an A/B testing framework through bootstrapping.
 
 
-Key Idea
+_Key Idea_
 
 
 Since we do not have a true randomized experiment, we:
 
 
-Re-sample the matched dataset multiple times
+•	Re-sample the matched dataset multiple times
 
-Compute the treatment effect repeatedly
+•	Compute the treatment effect repeatedly
 
-Build an empirical distribution of the effect size
+•	Build an empirical distribution of the effect size
+
+
+_Details_
+
+
+1. Define the metric
+
+Primary: GMV uplift (or log(GMV), growth rate, etc.)
+Example:
+ATE = mean(GMV_treatment) - mean(GMV_control)
+
+
+2. Bootstrap sampling
+
+Perform N iterations (e.g., 100–1000)
+In each iteration:
+Sample with replacement from matched treatment + control
+Recompute the treatment effect (ATE)
+
+
+3. Build empirical distribution
+
+After N iterations, you get:
+ATE_1, ATE_2, ..., ATE_N
+
+This forms the sampling distribution of the treatment effect
+
+
+4. Evaluate impact
+
+From this distribution, compute:
+
+Mean effect (expected uplift)
+Confidence interval (e.g., 95%)
+Statistical significance
+
+
+Example:
+
+CI = [P2.5, P97.5] of ATE distribution
+Decision Rules
+If CI excludes 0 → statistically significant impact
+If CI includes 0 → inconclusive / no clear effect
+If distribution is skewed → investigate heterogeneity / bias
