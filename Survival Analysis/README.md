@@ -41,4 +41,8 @@ $$L(\beta) = \prod_{k=1}^{\text{number of events}}L_k(\beta)$$
 
 <img width="643" height="241" alt="image" src="https://github.com/user-attachments/assets/cb0fae0b-4e86-4841-bbad-3922c6172f28" />
 
+**Result**
+
+_'A one-std increase in X_covariate leads to xx% increase in T3 upleveling proba'_
+<img width="756" height="361" alt="image" src="https://github.com/user-attachments/assets/951ab341-4d86-4ac5-8e4c-692e5fa77b33" />
 
