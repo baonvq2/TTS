@@ -35,6 +35,7 @@ Initially, we explored using Traditional ML to generate common "voluntary reason
     - Strict format: ensure consistency and scalability
    
 **Result example**
+
 PART 1: MACHINE-READABLE SUMMARY
 ```json
 {
